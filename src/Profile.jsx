@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Icon, StatusBar } from './atoms';
+import { Icon } from './atoms';
 import { initials } from './profileStore';
 
 /* Profile — Datos personales · IMC · Plan de entrenamiento personal.
@@ -64,7 +64,7 @@ const Card = ({ children, style, pad = 18 }) => (
   <div style={{ background: T.card, borderRadius: 18, padding: pad, border: `1px solid ${T.line}`, ...style }}>{children}</div>
 );
 
-export function ProfileDataScreen({ profile, onChange, onSeePlan }) {
+export function ProfileDataScreen({ profile, onChange, onSeePlan, onShowSketches }) {
   const [editing, setEditing] = useState(false);
   const [draftName, setDraftName] = useState(profile.name);
   const [draftEmail, setDraftEmail] = useState(profile.email);
@@ -86,7 +86,6 @@ export function ProfileDataScreen({ profile, onChange, onSeePlan }) {
 
   return (
     <div className="scr" style={{ background: T.bg, color: T.ink }}>
-      <StatusBar color={T.ink} />
       <div className="scroll-area">
         <div style={{ padding: '6px 16px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div className="row between" style={{ marginTop: 2 }}>
@@ -194,6 +193,16 @@ export function ProfileDataScreen({ profile, onChange, onSeePlan }) {
             fórmula clásica 220 − edad. Estos son cálculos reales sobre los datos que ingreses; lo que falta para
             ser 100% preciso es tu composición corporal real (% grasa) y una prueba de esfuerzo.
           </div>
+
+          {onShowSketches && (
+            <button onClick={onShowSketches} style={{
+              alignSelf: 'flex-start', border: 'none', background: 'none', cursor: 'pointer',
+              padding: '6px 2px', fontFamily: 'inherit', fontSize: 11.5, fontWeight: 600,
+              color: T.muted, textDecoration: 'underline', textUnderlineOffset: 3,
+            }}>
+              Ver bocetos de diseño (exploraciones visuales)
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -250,7 +259,6 @@ export function TrainingPlanScreen({ profile, onChange, onBack }) {
 
   return (
     <div className="scr" style={{ background: T.bg, color: T.ink }}>
-      <StatusBar color={T.ink} />
       <div className="scroll-area">
         <div style={{ padding: '6px 16px 22px', display: 'flex', flexDirection: 'column', gap: 13 }}>
           <div className="row between" style={{ marginTop: 2 }}>

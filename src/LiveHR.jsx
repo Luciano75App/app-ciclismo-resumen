@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Icon, StatusBar } from './atoms';
+import { Icon } from './atoms';
 import { useHeartRateSensor } from './useHeartRateSensor';
 
 /* LiveHR — "Pulso en vivo": la pantalla entera cambia de color según
@@ -89,7 +89,6 @@ export default function LiveHRScreen({ elapsed = '00:48:12', dist = '21.4' }) {
       background: `radial-gradient(125% 72% at 50% 30%, ${z.glow} 0%, transparent 58%), ${z.deep}`,
       transition: 'background 0.9s cubic-bezier(.4,0,.2,1)',
     }}>
-      <StatusBar color={cream} />
 
       <div className="row between" style={{ padding: '4px 18px 2px' }}>
         <div className="row gap8" style={{ background: 'rgba(0,0,0,0.22)', padding: '6px 11px 6px 9px', borderRadius: 30 }}>

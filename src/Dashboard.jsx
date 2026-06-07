@@ -1,4 +1,4 @@
-import { Icon, StatusBar, MapHero } from './atoms';
+import { Icon, MapHero } from './atoms';
 import { initials as nameInitials } from './profileStore';
 
 /* Dashboard — "Tablero de inicio": el hub de la app.
@@ -57,7 +57,6 @@ export default function Dashboard({ theme = 'light', showNav = true, profile, on
 
   return (
     <div className="scr" style={{ background: T.bg, color: T.ink }}>
-      <StatusBar color={T.ink} />
 
       <div className="scroll-area">
         <div style={{ padding: '8px 16px 20px', display: 'flex', flexDirection: 'column', gap: 14 }}>

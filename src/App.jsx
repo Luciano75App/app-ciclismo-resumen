@@ -124,10 +124,10 @@ function HistorialScreen() {
 }
 
 /* ── Perfil · IMC · plan de entrenamiento ──────────────────────────────── */
-function PerfilScreen({ profile, onChange }) {
+function PerfilScreen({ profile, onChange, onShowSketches }) {
   const [screen, setScreen] = useState('datos'); // datos | plan
   return screen === 'datos'
-    ? <ProfileDataScreen profile={profile} onChange={onChange} onSeePlan={() => setScreen('plan')} />
+    ? <ProfileDataScreen profile={profile} onChange={onChange} onSeePlan={() => setScreen('plan')} onShowSketches={onShowSketches} />
     : <TrainingPlanScreen profile={profile} onChange={onChange} onBack={() => setScreen('datos')} />;
 }
 
@@ -239,18 +239,9 @@ function App() {
         {tab === 'pulso' && <PulsoScreen />}
         {tab === 'grabar' && <GrabarScreen profile={profile} />}
         {tab === 'historial' && <HistorialScreen />}
-        {tab === 'perfil' && <PerfilScreen profile={profile} onChange={updateProfile} />}
+        {tab === 'perfil' && <PerfilScreen profile={profile} onChange={updateProfile} onShowSketches={() => setShowSketches(true)} />}
       </div>
       <BottomNav active={tab} onChange={setTab} />
-      <button onClick={() => setShowSketches(true)} style={{
-        position: 'fixed', bottom: 78, right: 14, zIndex: 30,
-        border: '1px solid var(--line)', background: 'var(--paper)', cursor: 'pointer',
-        padding: '7px 12px', borderRadius: 999, fontSize: 11, fontWeight: 700,
-        color: 'var(--stone)', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(0,0,0,0.10)',
-        opacity: 0.8,
-      }} title="Ver las exploraciones visuales del diseño original">
-        Ver bocetos de diseño
-      </button>
     </div>
   );
 }

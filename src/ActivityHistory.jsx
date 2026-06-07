@@ -1,4 +1,4 @@
-import { Icon, StatusBar } from './atoms';
+import { Icon } from './atoms';
 import { fmtClock, fmtKm } from './geo';
 
 /* ActivityHistory — lista de actividades reales guardadas localmente
@@ -7,7 +7,6 @@ export default function ActivityHistory({ activities, onOpen, onDelete }) {
   const ink = 'var(--bark)', muted = 'var(--stone)';
   return (
     <div className="scr" style={{ background: 'var(--sand)', color: ink }}>
-      <StatusBar color="var(--bark)" />
       <div className="row between" style={{ padding: '6px 16px 10px' }}>
         <span style={{ fontSize: 15, fontWeight: 700 }}>Historial · actividades reales</span>
       </div>

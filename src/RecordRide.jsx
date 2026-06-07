@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Icon, StatusBar } from './atoms';
+import { Icon } from './atoms';
 import { useRideRecorder } from './useRideRecorder';
 import { useHeartRateSensor } from './useHeartRateSensor';
 import { saveActivity } from './activityStore';
@@ -95,7 +95,6 @@ export default function RecordRide({ profile, onSaved }) {
 
   return (
     <div className="scr" style={{ background: 'var(--sand)', color: 'var(--bark)' }}>
-      <StatusBar color="var(--bark)" />
       <div className="row between" style={{ padding: '6px 16px 10px' }}>
         <span style={{ fontSize: 15, fontWeight: 700 }}>Grabar ruta · GPS real</span>
         {rec.status !== 'idle' && (

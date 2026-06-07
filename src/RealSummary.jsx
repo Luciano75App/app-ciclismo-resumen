@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Icon, StatusBar } from './atoms';
+import { Icon } from './atoms';
 import { projectToViewBox, pointsToPath, fmtClock, fmtKm } from './geo';
 
 /* RealSummary — "Resumen de actividad" pero con datos 100% reales,
@@ -45,7 +45,6 @@ export default function RealSummary({ activity, onBack }) {
   if (!activity) {
     return (
       <div className="scr" style={{ background: 'var(--sand)', color: ink, alignItems: 'center', justifyContent: 'center' }}>
-        <StatusBar color="var(--bark)" />
         <div style={{ flex: 1, display: 'grid', placeItems: 'center', padding: 24, textAlign: 'center' }}>
           <div>
             <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 6 }}>Todavía no grabaste ninguna ruta</div>
@@ -63,7 +62,6 @@ export default function RealSummary({ activity, onBack }) {
 
   return (
     <div className="scr" style={{ background: 'var(--sand)', color: ink }}>
-      <StatusBar color="var(--bark)" />
       <div className="row between" style={{ padding: '6px 16px 10px' }}>
         <button onClick={onBack} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}>
           <Icon name="back" size={22} color={ink} />
