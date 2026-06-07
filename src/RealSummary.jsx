@@ -124,8 +124,47 @@ export default function RealSummary({ activity, onBack }) {
                   <span className="num" style={{ fontSize: 26, color: ink }}>{activity.points?.length || 0}</span>
                 </div>
               </div>
+              {activity.elevation && (
+                <>
+                  <div>
+                    <div className="row gap6" style={{ color: muted, marginBottom: 6 }}>
+                      <Icon name="mountain" size={15} color={muted} />
+                      <span className="label-cap" style={{ color: muted, fontSize: 9.5 }}>Desnivel +</span>
+                    </div>
+                    <div className="vu" style={{ gap: 3 }}>
+                      <span className="num" style={{ fontSize: 26, color: ink }}>{activity.elevation.gainM}</span>
+                      <span className="num" style={{ fontSize: 12, color: muted }}>m</span>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="row gap6" style={{ color: muted, marginBottom: 6 }}>
+                      <Icon name="mountain" size={15} color={muted} style={{ transform: 'scaleY(-1)' }} />
+                      <span className="label-cap" style={{ color: muted, fontSize: 9.5 }}>Desnivel −</span>
+                    </div>
+                    <div className="vu" style={{ gap: 3 }}>
+                      <span className="num" style={{ fontSize: 26, color: ink }}>{activity.elevation.lossM}</span>
+                      <span className="num" style={{ fontSize: 12, color: muted }}>m</span>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </Card>
+
+          {activity.estCalories ? (
+            <Card style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <span style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--sand-2)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                <Icon name="flame" size={22} color="var(--clay)" fill="var(--clay)" sw={0} />
+              </span>
+              <div style={{ flex: 1 }}>
+                <span className="label-cap" style={{ color: muted }}>Calorías · estimación</span>
+                <div className="vu" style={{ gap: 6, marginTop: 2 }}>
+                  <span className="num" style={{ fontSize: 28, color: ink }}>{activity.estCalories.toLocaleString('es')}</span>
+                  <span className="num" style={{ fontSize: 13, color: muted }}>kcal</span>
+                </div>
+              </div>
+            </Card>
+          ) : null}
 
           {activity.heartRate ? (
             <Card>
@@ -168,12 +207,25 @@ export default function RealSummary({ activity, onBack }) {
             </Card>
           )}
 
+          {!activity.elevation && (
+            <Card style={{ background: 'var(--sand-2)', border: '1px dashed var(--line)' }}>
+              <div className="row gap8" style={{ color: muted, fontSize: 13 }}>
+                <Icon name="mountain" size={16} color={muted} />
+                Esta grabación no tiene datos de desnivel — tu GPS no reportó altitud con suficiente
+                precisión durante la salida (algunos celulares no traen barómetro).
+              </div>
+            </Card>
+          )}
+
           <Card style={{ background: 'var(--sand-2)', border: '1px dashed var(--line)' }}>
-            <div className="label-cap" style={{ color: muted, marginBottom: 8 }}>Aún no disponible (requiere otros sensores)</div>
+            <div className="label-cap" style={{ color: muted, marginBottom: 8 }}>Aún no disponible (requiere otro sensor)</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 13, color: muted }}>
-              <div className="row gap8"><Icon name="mountain" size={16} color={muted} /> Desnivel — necesita altímetro/barómetro</div>
-              <div className="row gap8"><Icon name="flame" size={16} color={muted} /> Calorías — se calcula a partir de la FC y tu perfil</div>
-              <div className="row gap8"><Icon name="cadence" size={16} color={muted} /> Cadencia — necesita sensor en la biela</div>
+              <div className="row gap8"><Icon name="cadence" size={16} color={muted} /> Cadencia — necesita un sensor en la biela/pedalier</div>
+            </div>
+            <div style={{ fontSize: 10.5, color: muted, marginTop: 10, lineHeight: 1.4 }}>
+              El desnivel viene de la altitud reportada por tu GPS y las calorías son una estimación con el
+              método MET (velocidad media + tu peso + desnivel) — el mismo enfoque que usan la mayoría de
+              relojes deportivos sin medidor de potencia.
             </div>
           </Card>
         </div>

@@ -10,19 +10,24 @@ export function useRideRecorder() {
   const [distance, setDistance] = useState(0);   // metros
   const [elapsed, setElapsed] = useState(0);     // ms (tiempo en movimiento)
   const [speed, setSpeed] = useState(0);         // m/s, instantánea (de la API GPS)
+  const [elevGain, setElevGain] = useState(0);   // metros de desnivel positivo acumulado
+  const [elevLoss, setElevLoss] = useState(0);   // metros de desnivel negativo acumulado
+  const [altitude, setAltitude] = useState(null); // altitud actual (m), si el GPS la reporta
+  const [hasAltitude, setHasAltitude] = useState(false);
   const [error, setError] = useState(null);
   const [supported] = useState(() => 'geolocation' in navigator);
 
   const watchId = useRef(null);
   const lastPoint = useRef(null);
+  const lastAlt = useRef(null);
   const tickRef = useRef(null);
   const lastTick = useRef(null);
 
   const onPosition = useCallback((pos) => {
-    const { latitude: lat, longitude: lng, speed: spd, accuracy } = pos.coords;
+    const { latitude: lat, longitude: lng, speed: spd, accuracy, altitude: alt, altitudeAccuracy: altAcc } = pos.coords;
     // descarta lecturas de baja precisión (>50 m) — ruido típico en interiores
     if (accuracy && accuracy > 50) return;
-    const p = { lat, lng, t: pos.timestamp };
+    const p = { lat, lng, t: pos.timestamp, alt: alt ?? null };
     setPoints((prev) => [...prev, p]);
     if (lastPoint.current) {
       const d = haversine(lastPoint.current, p);
@@ -31,6 +36,20 @@ export function useRideRecorder() {
     }
     lastPoint.current = p;
     setSpeed(spd != null && spd >= 0 ? spd : 0);
+
+    // Desnivel — sólo si el dispositivo reporta altitud con una precisión razonable
+    // (muchos celulares no traen barómetro y devuelven null o ruido de >15 m).
+    if (alt != null && (altAcc == null || altAcc <= 25)) {
+      setHasAltitude(true);
+      setAltitude(alt);
+      if (lastAlt.current != null) {
+        const dAlt = alt - lastAlt.current;
+        // ignora micro-ruido (< 1 m) típico del GPS de celular
+        if (dAlt > 1) setElevGain((g) => g + dAlt);
+        else if (dAlt < -1) setElevLoss((l) => l - dAlt);
+      }
+      lastAlt.current = alt;
+    }
   }, []);
 
   const onError = useCallback((err) => {
@@ -70,8 +89,13 @@ export function useRideRecorder() {
     setDistance(0);
     setElapsed(0);
     setSpeed(0);
+    setElevGain(0);
+    setElevLoss(0);
+    setAltitude(null);
+    setHasAltitude(false);
     setError(null);
     lastPoint.current = null;
+    lastAlt.current = null;
   }, []);
 
   // Reloj — solo avanza mientras se está grabando (no en pausa).
@@ -95,6 +119,7 @@ export function useRideRecorder() {
 
   return {
     status, points, distance, elapsed, speed, avgSpeed, error, supported,
+    elevGain, elevLoss, altitude, hasAltitude,
     start, pause, resume, stop, reset,
   };
 }

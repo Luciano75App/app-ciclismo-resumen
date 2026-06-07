@@ -36,7 +36,7 @@ function todayLabel() {
   return `${dias[d.getDay()]}, ${d.getDate()} de ${meses[d.getMonth()]}`;
 }
 
-export default function Dashboard({ theme = 'light', showNav = true, profile }) {
+export default function Dashboard({ theme = 'light', showNav = true, profile, onStart }) {
   const dark = theme === 'dark';
   const name = profile?.name?.trim() || 'ciclista';
   const firstName = name.split(/\s+/)[0];
@@ -78,14 +78,14 @@ export default function Dashboard({ theme = 'light', showNav = true, profile }) 
           </div>
 
           {/* CTA empezar */}
-          <button style={{
+          <button onClick={onStart} style={{
             border: 'none', background: 'var(--lime)', color: 'var(--bark)', borderRadius: 18, padding: 18,
             cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             boxShadow: dark ? '0 8px 26px rgba(200,242,48,0.22)' : 'none', fontFamily: 'inherit'
           }}>
             <div>
               <div style={{ fontSize: 21, fontWeight: 800, letterSpacing: '-0.01em' }}>Empezar a pedalear</div>
-              <div style={{ fontSize: 12.5, fontWeight: 600, opacity: 0.65, marginTop: 2 }}>Conecta el reloj y sal a rodar</div>
+              <div style={{ fontSize: 12.5, fontWeight: 600, opacity: 0.65, marginTop: 2 }}>Grabá tu ruta con GPS real</div>
             </div>
             <span style={{ width: 50, height: 50, borderRadius: '50%', background: 'var(--bark)', display: 'grid', placeItems: 'center' }}>
               <svg width="20" height="20" viewBox="0 0 20 20" fill="var(--lime)"><path d="M6 4l11 6-11 6z" /></svg>

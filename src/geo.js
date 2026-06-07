@@ -60,3 +60,33 @@ export function fmtClock(ms) {
 export function fmtKm(meters) {
   return (meters / 1000).toFixed(2);
 }
+
+/* estimateCalories — cálculo aproximado del gasto energético de una salida
+   en bici, a partir de datos reales (duración, velocidad media, desnivel
+   positivo) y tu peso corporal.
+
+   Es una ESTIMACIÓN (no una medición): usa el método de equivalentes
+   metabólicos (MET) de la "Compendium of Physical Activities" — el estándar
+   que también usan relojes y apps de fitness cuando no tienen sensores de
+   potencia. A mayor velocidad media, mayor intensidad (MET) asignado.
+   Sumamos además el trabajo extra de subir desnivel (energía potencial,
+   con un factor de eficiencia muscular ~24%, típico en ciclismo). */
+function metForSpeed(kmh) {
+  if (kmh < 16) return 4.0;   // paseo suave
+  if (kmh < 19) return 6.0;   // ritmo moderado
+  if (kmh < 22) return 8.0;   // vigoroso
+  if (kmh < 25) return 10.0;  // rápido
+  if (kmh < 30) return 12.0;  // carrera / muy rápido
+  return 15.8;                // competitivo
+}
+
+export function estimateCalories({ kg = 75, durationMs = 0, avgKmh = 0, elevGainM = 0 }) {
+  const hours = durationMs / 3600000;
+  if (hours <= 0) return 0;
+  const met = metForSpeed(avgKmh);
+  const base = met * kg * hours; // kcal por la fórmula MET estándar (MET × kg × h)
+  // energía potencial para subir elevGainM metros con tu peso (E = m·g·h),
+  // convertida a kcal y ajustada por ~24% de eficiencia muscular humana.
+  const climbKcal = (kg * 9.81 * Math.max(0, elevGainM)) / 4184 / 0.24;
+  return Math.round(base + climbKcal);
+}

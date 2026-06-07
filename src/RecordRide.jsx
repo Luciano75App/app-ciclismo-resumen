@@ -3,7 +3,8 @@ import { Icon, StatusBar } from './atoms';
 import { useRideRecorder } from './useRideRecorder';
 import { useHeartRateSensor } from './useHeartRateSensor';
 import { saveActivity } from './activityStore';
-import { projectToViewBox, pointsToPath, fmtClock, fmtKm } from './geo';
+import { projectToViewBox, pointsToPath, fmtClock, fmtKm, estimateCalories } from './geo';
+import { DEFAULT_PROFILE } from './profileStore';
 
 /* RecordRide — pantalla de grabación EN VIVO con GPS real del navegador.
    Sin datos inventados: la distancia, el tiempo, la velocidad y la traza
@@ -49,7 +50,7 @@ function StatBlock({ label, value, unit }) {
   );
 }
 
-export default function RecordRide({ onSaved }) {
+export default function RecordRide({ profile, onSaved }) {
   const rec = useRideRecorder();
   const hr = useHeartRateSensor();
   const [name, setName] = useState('Ruta del ' + new Date().toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' }));
@@ -57,6 +58,8 @@ export default function RecordRide({ onSaved }) {
 
   const kmh = rec.avgSpeed * 3.6;
   const liveKmh = rec.speed * 3.6;
+  const kg = profile?.kg ?? DEFAULT_PROFILE.kg;
+  const estKcal = estimateCalories({ kg, durationMs: rec.elapsed, avgKmh: kmh, elevGainM: rec.elevGain });
 
   const [saving, setSaving] = useState(false);
 
@@ -70,6 +73,12 @@ export default function RecordRide({ onSaved }) {
       avgSpeedKmh: kmh,
       points: rec.points,
       source: 'gps-real',
+      elevation: rec.hasAltitude ? {
+        gainM: Math.round(rec.elevGain),
+        lossM: Math.round(rec.elevLoss),
+      } : null,
+      estCalories: estKcal,
+      profileSnapshot: { kg, age: profile?.age, sex: profile?.sex },
       heartRate: hr.samples.length ? {
         samples: hr.samples,
         avgBpm: hr.avgBpm,
@@ -122,12 +131,22 @@ export default function RecordRide({ onSaved }) {
             <StatBlock label="Vel. media" value={kmh.toFixed(1)} unit="km/h" />
           </div>
 
-          <div className="row between" style={{
-            background: 'var(--paper)', borderRadius: 14, padding: '12px 16px', border: '1px solid var(--line-2)'
+          <div style={{
+            background: 'var(--paper)', borderRadius: 18, padding: '18px 8px',
+            border: '1px solid var(--line-2)', display: 'flex',
           }}>
-            <span className="label-cap" style={{ color: 'var(--stone)' }}>Velocidad actual (GPS)</span>
-            <span className="num" style={{ fontSize: 18, color: 'var(--bark)' }}>{liveKmh.toFixed(1)} <span style={{ fontSize: 11, color: 'var(--stone)' }}>km/h</span></span>
+            <StatBlock label="Desnivel +" value={rec.hasAltitude ? Math.round(rec.elevGain) : '—'} unit={rec.hasAltitude ? 'm' : ''} />
+            <StatBlock label="Vel. actual" value={liveKmh.toFixed(1)} unit="km/h" />
+            <StatBlock label="Calorías (est.)" value={estKcal || '—'} unit={estKcal ? 'kcal' : ''} />
           </div>
+
+          {!rec.hasAltitude && rec.status !== 'idle' && (
+            <div style={{ fontSize: 11, color: 'var(--stone)', padding: '0 4px', lineHeight: 1.45 }}>
+              Tu dispositivo todavía no reportó altitud por GPS — el desnivel puede tardar unos minutos en
+              aparecer (o no estar disponible si tu celular no tiene barómetro/GPS de altitud).
+              Mientras tanto, las calorías se estiman sólo a partir de tu velocidad y peso.
+            </div>
+          )}
 
           {/* sensor de pulso BLE */}
           <div style={{ background: 'var(--paper)', borderRadius: 14, padding: '14px 16px', border: '1px solid var(--line-2)' }}>
@@ -176,12 +195,13 @@ export default function RecordRide({ onSaved }) {
           </div>
 
           <div style={{ fontSize: 11.5, color: 'var(--stone)', lineHeight: 1.5, padding: '0 2px' }}>
-            Estos números provienen del GPS real de tu dispositivo (<code>navigator.geolocation</code>):
-            la distancia se calcula sumando la distancia entre cada par de coordenadas registradas
-            (fórmula de Haversine) y el tiempo es el reloj real mientras grabás.
-            El pulso, si conectás un sensor BLE, también es 100% real (Web Bluetooth, servicio
-            "Heart Rate" estándar). Desnivel y calorías siguen sin estar disponibles — necesitan
-            altímetro/barómetro y un cálculo a partir de tu perfil + FC.
+            La distancia, el tiempo, la velocidad y la traza salen 100% del GPS real de tu dispositivo
+            (<code>navigator.geolocation</code> + fórmula de Haversine). El <b>desnivel</b> usa la altitud
+            que reporta tu GPS (cuando tu celular la provee con suficiente precisión). Las <b>calorías</b> son
+            una <b>estimación</b> — se calculan con el método MET estándar (velocidad media × tu peso × tiempo),
+            sumando el esfuerzo extra de subir desnivel; no es una medición exacta como la de un medidor de
+            potencia, pero es el mismo método que usan la mayoría de relojes deportivos sin sensores avanzados.
+            El pulso, si conectás un sensor BLE, también es 100% real (Web Bluetooth, servicio "Heart Rate" estándar).
           </div>
 
           {/* controles */}

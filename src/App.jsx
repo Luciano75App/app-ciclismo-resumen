@@ -58,8 +58,8 @@ function BottomNav({ active, onChange }) {
 }
 
 /* ── Inicio: tablero real + acceso directo a grabar ───────────────────── */
-function InicioScreen({ profile }) {
-  return <Dashboard theme="light" showNav={false} profile={profile} />;
+function InicioScreen({ profile, onStart }) {
+  return <Dashboard theme="light" showNav={false} profile={profile} onStart={onStart} />;
 }
 
 /* ── Pulso en vivo ─────────────────────────────────────────────────────── */
@@ -68,11 +68,11 @@ function PulsoScreen() {
 }
 
 /* ── Grabar: flujo real de grabación de ruta con GPS ──────────────────── */
-function GrabarScreen() {
+function GrabarScreen({ profile }) {
   const [view, setView] = useState('record'); // record | summary
   const [picked, setPicked] = useState(null);
   return view === 'record' ? (
-    <RecordRide onSaved={(act) => { setPicked(act); setView('summary'); }} />
+    <RecordRide profile={profile} onSaved={(act) => { setPicked(act); setView('summary'); }} />
   ) : (
     <RealSummary activity={picked} onBack={() => setView('record')} />
   );
@@ -235,9 +235,9 @@ function App() {
   return (
     <div style={{ height: '100dvh', width: '100vw', display: 'flex', flexDirection: 'column', background: 'var(--sand)', overflow: 'hidden' }}>
       <div className="scr" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
-        {tab === 'inicio' && <InicioScreen profile={profile} />}
+        {tab === 'inicio' && <InicioScreen profile={profile} onStart={() => setTab('grabar')} />}
         {tab === 'pulso' && <PulsoScreen />}
-        {tab === 'grabar' && <GrabarScreen />}
+        {tab === 'grabar' && <GrabarScreen profile={profile} />}
         {tab === 'historial' && <HistorialScreen />}
         {tab === 'perfil' && <PerfilScreen profile={profile} onChange={updateProfile} />}
       </div>
