@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="100" fill="#26221b"/>
+  <g transform="translate(256 256)">
+    <!-- rueda trasera -->
+    <circle cx="-92" cy="60" r="78" fill="none" stroke="#c8f230" stroke-width="20"/>
+    <!-- rueda delantera -->
+    <circle cx="100" cy="60" r="78" fill="none" stroke="#c8f230" stroke-width="20"/>
+    <!-- cuadro -->
+    <path d="M-92 60 L-22 -54 L100 60 M-22 -54 L18 60 M-22 -54 L-50 -86 L-78 -86" fill="none" stroke="#f3efe3" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- manubrio / asiento -->
+    <path d="M18 60 L48 -2 M-50 -86 L-66 -106" fill="none" stroke="#f3efe3" stroke-width="18" stroke-linecap="round"/>
+  </g>
+</svg>

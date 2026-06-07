@@ -1,0 +1,129 @@
+/* ───────────────────────────────────────────────────────────
+   App Ciclismo — sistema visual
+   Estética: outdoor / aventura · tonos tierra + acento verde lima
+   Tipos: Barlow Condensed (métricas/display) + Hanken Grotesk (UI/texto)
+   ─────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow+Semi+Condensed:wght@500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap');
+
+:root {
+  /* acento verde lima eléctrico */
+  --lime:       #c8f230;
+  --lime-deep:  #a6cf1f;
+  --lime-soft:  #e7f7a8;
+
+  /* tierra — claro "Sendero" */
+  --sand:    #f4f0e8;
+  --sand-2:  #ece6d9;
+  --paper:   #fffdf8;
+  --bark:    #26221b;
+  --bark-2:  #4a443a;
+  --stone:   #8b8273;
+  --stone-2: #b6ad9c;
+  --line:    rgba(38,34,27,0.10);
+  --line-2:  rgba(38,34,27,0.06);
+  --clay:    #c2643b;
+
+  /* oscuro "Cabina" */
+  --night:    #16140f;
+  --night-2:  #1f1c15;
+  --panel:    #242017;
+  --panel-2:  #2c281e;
+  --cream:    #f3efe3;
+  --ash:      #9c9484;
+  --ash-2:    #6f685b;
+  --nline:    rgba(243,239,227,0.10);
+  --nline-2:  rgba(243,239,227,0.05);
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root {
+  margin: 0;
+  height: 100%;
+  background: #f0eee9;
+}
+
+body {
+  font-family: 'Hanken Grotesk', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.scr {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  font-family: 'Hanken Grotesk', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: column;
+}
+
+/* números / display */
+.num { font-family: 'Barlow Condensed', sans-serif; font-weight: 600; line-height: 0.92; letter-spacing: 0.01em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.vu { display: flex; align-items: baseline; flex-wrap: nowrap; white-space: nowrap; }
+.semi { font-family: 'Barlow Semi Condensed', sans-serif; }
+
+.label-cap {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* status bar android */
+.statusbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 20px 3px;
+  font-size: 13px; font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.statusbar .sb-icons { display: flex; align-items: center; gap: 6px; }
+
+/* navegación inferior android */
+.navbar {
+  display: flex; align-items: center; justify-content: space-around;
+  padding: 10px 8px 16px;
+}
+.navitem { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; }
+
+/* utilidades */
+.row { display: flex; align-items: center; }
+.between { justify-content: space-between; }
+.gap6 { gap: 6px; } .gap8 { gap: 8px; } .gap10 { gap: 10px; } .gap12 { gap: 12px; }
+
+.scroll-area { flex: 1 1 auto; overflow: auto; }
+.scroll-area::-webkit-scrollbar { display: none; }
+
+/* slider de "esfuerzo" / sliders de perfil */
+input.effort { -webkit-appearance: none; appearance: none; height: 6px; border-radius: 6px; outline: none; cursor: pointer; }
+input.effort::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 26px; height: 26px; border-radius: 50%; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.4); cursor: grab; border: 3px solid currentColor; }
+input.effort::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: #fff; border: 3px solid currentColor; cursor: grab; }
+
+/* placeholder de imagen (mapa) */
+.ph-note {
+  position: absolute; bottom: 8px; left: 10px;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 9px; letter-spacing: 0.04em;
+  padding: 2px 6px; border-radius: 4px;
+}
+
+/* fondo de la página que aloja el "teléfono" */
+.phone-stage {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  background: #f0eee9;
+}
+.phone-frame {
+  width: 393px;
+  max-height: 92vh;
+  aspect-ratio: 393 / 852;
+  border-radius: 44px;
+  overflow: hidden;
+  box-shadow: 0 30px 80px rgba(38,34,27,0.28), 0 2px 0 rgba(255,255,255,0.6) inset;
+  border: 1px solid rgba(38,34,27,0.08);
+}
