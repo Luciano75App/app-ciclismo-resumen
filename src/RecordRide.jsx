@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Icon } from './atoms';
 import { useRideRecorder } from './useRideRecorder';
 import { useHeartRateSensor } from './useHeartRateSensor';
+import { useVoiceCoach } from './useVoiceCoach';
 import { saveActivity } from './activityStore';
 import { projectToViewBox, pointsToPath, fmtClock, fmtKm, estimateCalories } from './geo';
 import { DEFAULT_PROFILE } from './profileStore';
@@ -62,6 +63,16 @@ export default function RecordRide({ profile, onSaved }) {
   const estKcal = estimateCalories({ kg, durationMs: rec.elapsed, avgKmh: kmh, elevGainM: rec.elevGain });
 
   const [saving, setSaving] = useState(false);
+  const [coachOn, setCoachOn] = useState(true);
+  const coach = useVoiceCoach({
+    enabled: coachOn,
+    active: rec.status === 'recording',
+    distanceM: rec.distance,
+    elapsedMs: rec.elapsed,
+    bpm: hr.status === 'connected' ? hr.bpm : null,
+    kcal: estKcal,
+    profile,
+  });
 
   const handleSave = async () => {
     setSaving(true);
@@ -147,6 +158,41 @@ export default function RecordRide({ profile, onSaved }) {
             </div>
           )}
 
+          {/* coach de voz */}
+          <div style={{ background: 'var(--paper)', borderRadius: 14, padding: '14px 16px', border: '1px solid var(--line-2)' }}>
+            <div className="row between" style={{ alignItems: 'center' }}>
+              <span className="row gap8" style={{ color: 'var(--bark)', fontWeight: 700, fontSize: 13.5 }}>
+                <Icon name="bolt" size={16} color="var(--lime-deep)" /> Coach de voz
+              </span>
+              <button
+                onClick={() => setCoachOn((v) => !v)}
+                aria-pressed={coachOn}
+                style={{
+                  border: 'none', cursor: 'pointer', width: 46, height: 27, borderRadius: 14, padding: 3,
+                  background: coachOn ? 'var(--lime)' : 'var(--sand-2)', display: 'flex',
+                  justifyContent: coachOn ? 'flex-end' : 'flex-start', transition: 'background .2s',
+                }}>
+                <span style={{ width: 21, height: 21, borderRadius: '50%', background: coachOn ? 'var(--bark)' : '#fff', boxShadow: '0 1px 2px rgba(0,0,0,0.25)' }} />
+              </button>
+            </div>
+            {!coach.supported ? (
+              <div style={{ fontSize: 11, color: 'var(--stone)', marginTop: 8 }}>
+                Tu navegador no soporta locución por voz (Web Speech API) — probá con Chrome.
+              </div>
+            ) : (
+              <div style={{ fontSize: 11, color: 'var(--stone)', marginTop: 8, lineHeight: 1.45 }}>
+                {coachOn
+                  ? 'Te va a avisar por voz cada kilómetro (distancia, pulso real y calorías), te va a recordar hidratarte y te va a sugerir comer algo cuando convenga, según tu IMC.'
+                  : 'Activalo para escuchar avisos por voz mientras pedaleás: kilómetros, pulso, calorías, hidratación y alimentación.'}
+              </div>
+            )}
+            {coachOn && coach.lastMessage && rec.status === 'recording' && (
+              <div style={{ marginTop: 10, fontSize: 12, color: 'var(--bark)', fontWeight: 600, fontStyle: 'italic', borderLeft: '3px solid var(--lime)', paddingLeft: 10 }}>
+                "{coach.lastMessage}"
+              </div>
+            )}
+          </div>
+
           {/* sensor de pulso BLE */}
           <div style={{ background: 'var(--paper)', borderRadius: 14, padding: '14px 16px', border: '1px solid var(--line-2)' }}>
             <div className="row between">
@@ -201,6 +247,9 @@ export default function RecordRide({ profile, onSaved }) {
             sumando el esfuerzo extra de subir desnivel; no es una medición exacta como la de un medidor de
             potencia, pero es el mismo método que usan la mayoría de relojes deportivos sin sensores avanzados.
             El pulso, si conectás un sensor BLE, también es 100% real (Web Bluetooth, servicio "Heart Rate" estándar).
+            El <b>coach de voz</b> usa la síntesis de voz nativa del navegador (sin conexión a internet) y lee en
+            voz alta estos mismos datos en vivo — los avisos de hidratación y alimentación están pensados según
+            tu IMC real (calculado en tu Perfil), no son datos médicos.
           </div>
 
           {/* controles */}
