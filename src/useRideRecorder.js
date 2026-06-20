@@ -14,6 +14,7 @@ export function useRideRecorder() {
   const [elevLoss, setElevLoss] = useState(0);   // metros de desnivel negativo acumulado
   const [altitude, setAltitude] = useState(null); // altitud actual (m), si el GPS la reporta
   const [hasAltitude, setHasAltitude] = useState(false);
+  const [photos, setPhotos] = useState([]);       // fotos geolocalizadas tomadas durante la grabación
   const [error, setError] = useState(null);
   const [supported] = useState(() => 'geolocation' in navigator);
 
@@ -22,6 +23,7 @@ export function useRideRecorder() {
   const lastAlt = useRef(null);
   const tickRef = useRef(null);
   const lastTick = useRef(null);
+  const distanceRef = useRef(0);
 
   const onPosition = useCallback((pos) => {
     const { latitude: lat, longitude: lng, speed: spd, accuracy, altitude: alt, altitudeAccuracy: altAcc } = pos.coords;
@@ -32,7 +34,7 @@ export function useRideRecorder() {
     if (lastPoint.current) {
       const d = haversine(lastPoint.current, p);
       // ignora saltos absurdos (ruido GPS) — > 200 m entre lecturas consecutivas
-      if (d < 200) setDistance((prev) => prev + d);
+      if (d < 200) setDistance((prev) => { const next = prev + d; distanceRef.current = next; return next; });
     }
     lastPoint.current = p;
     setSpeed(spd != null && spd >= 0 ? spd : 0);
@@ -77,6 +79,20 @@ export function useRideRecorder() {
     lastTick.current = Date.now();
   }, []);
 
+  // Adjunta una foto real tomada con la cámara del celular, geolocalizada con
+  // la última posición GPS conocida y la distancia recorrida hasta ese punto.
+  const addPhoto = useCallback((dataUrl) => {
+    const at = lastPoint.current;
+    setPhotos((prev) => [...prev, {
+      id: Date.now() + '-' + prev.length,
+      dataUrl,
+      lat: at?.lat ?? null,
+      lng: at?.lng ?? null,
+      distanceM: distanceRef.current,
+      takenAt: Date.now(),
+    }]);
+  }, []);
+
   const stop = useCallback(() => {
     if (watchId.current != null) navigator.geolocation.clearWatch(watchId.current);
     watchId.current = null;
@@ -93,9 +109,11 @@ export function useRideRecorder() {
     setElevLoss(0);
     setAltitude(null);
     setHasAltitude(false);
+    setPhotos([]);
     setError(null);
     lastPoint.current = null;
     lastAlt.current = null;
+    distanceRef.current = 0;
   }, []);
 
   // Reloj — solo avanza mientras se está grabando (no en pausa).
@@ -119,7 +137,7 @@ export function useRideRecorder() {
 
   return {
     status, points, distance, elapsed, speed, avgSpeed, error, supported,
-    elevGain, elevLoss, altitude, hasAltitude,
-    start, pause, resume, stop, reset,
+    elevGain, elevLoss, altitude, hasAltitude, photos,
+    start, pause, resume, stop, reset, addPhoto,
   };
 }

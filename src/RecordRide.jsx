@@ -1,9 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Icon } from './atoms';
 import { useRideRecorder } from './useRideRecorder';
 import { useHeartRateSensor } from './useHeartRateSensor';
 import { useVoiceCoach } from './useVoiceCoach';
+import { useWakeLock } from './useWakeLock';
 import { saveActivity } from './activityStore';
+import { compressPhoto } from './photoUtils';
 import { projectToViewBox, pointsToPath, fmtClock, fmtKm, estimateCalories } from './geo';
 import { DEFAULT_PROFILE } from './profileStore';
 
@@ -11,12 +13,29 @@ import { DEFAULT_PROFILE } from './profileStore';
    Sin datos inventados: la distancia, el tiempo, la velocidad y la traza
    salen de navigator.geolocation.watchPosition(). */
 
-function LiveMap({ points }) {
+function LiveMap({ points, photos, onSelectPhoto }) {
+  const W = 393, H = 230;
   const path = useMemo(() => {
     if (points.length < 2) return null;
-    const coords = projectToViewBox(points, 393, 230);
+    const coords = projectToViewBox(points, W, H);
     return pointsToPath(coords);
   }, [points]);
+
+  // Ubica cada foto sobre el trazo según el punto GPS más cercano a su lat/lng real.
+  const photoDots = useMemo(() => {
+    if (!photos?.length || points.length < 2) return [];
+    const coords = projectToViewBox(points, W, H);
+    return photos
+      .filter((ph) => ph.lat != null)
+      .map((ph) => {
+        let best = 0, bestD = Infinity;
+        points.forEach((p, i) => {
+          const d = (p.lat - ph.lat) ** 2 + (p.lng - ph.lng) ** 2;
+          if (d < bestD) { bestD = d; best = i; }
+        });
+        return { ...ph, x: coords[best].x, y: coords[best].y };
+      });
+  }, [photos, points]);
 
   return (
     <div style={{
@@ -24,7 +43,7 @@ function LiveMap({ points }) {
       border: '1px solid var(--line)',
       background: 'linear-gradient(150deg, #e9e3d4, #ddd6c4)',
     }}>
-      <svg viewBox="0 0 393 230" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
         {path ? (
           <>
             <path d={path} fill="none" stroke="rgba(0,0,0,0.18)" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" transform="translate(0,2.5)" />
@@ -32,6 +51,13 @@ function LiveMap({ points }) {
           </>
         ) : null}
       </svg>
+      {photoDots.map((ph) => (
+        <button key={ph.id} onClick={() => onSelectPhoto?.(ph)} style={{
+          position: 'absolute', left: ph.x - 13, top: ph.y - 13, width: 26, height: 26, borderRadius: '50%',
+          border: '2px solid #fff', boxShadow: '0 2px 6px rgba(0,0,0,0.35)', padding: 0, cursor: 'pointer',
+          backgroundImage: `url(${ph.dataUrl})`, backgroundSize: 'cover', backgroundPosition: 'center',
+        }} title="Ver foto" />
+      ))}
       <span className="ph-note" style={{ background: 'rgba(255,255,255,0.65)', color: 'var(--stone)' }}>
         {points.length === 0 ? 'esperando señal GPS…' : `${points.length} puntos GPS reales`}
       </span>
@@ -74,6 +100,24 @@ export default function RecordRide({ profile, onSaved }) {
     profile,
   });
 
+  const wakeLock = useWakeLock(rec.status === 'recording');
+  const fileInputRef = useRef(null);
+  const [viewPhoto, setViewPhoto] = useState(null);
+  const [photoBusy, setPhotoBusy] = useState(false);
+
+  const handlePhotoFile = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setPhotoBusy(true);
+    try {
+      const dataUrl = await compressPhoto(file);
+      rec.addPhoto(dataUrl);
+    } finally {
+      setPhotoBusy(false);
+    }
+  };
+
   const handleSave = async () => {
     setSaving(true);
     const activity = await saveActivity({
@@ -96,6 +140,7 @@ export default function RecordRide({ profile, onSaved }) {
         maxBpm: hr.maxBpm,
         device: hr.deviceName,
       } : null,
+      photos: rec.photos,
     });
     setSaved(activity);
     setSaving(false);
@@ -130,7 +175,48 @@ export default function RecordRide({ profile, onSaved }) {
             </div>
           )}
 
-          <LiveMap points={rec.points} />
+          {rec.status === 'recording' && !wakeLock.held && (
+            <div style={{ background: '#fff3e0', border: '1px solid #f0d8a8', borderRadius: 14, padding: '10px 14px', fontSize: 11.5, color: '#7a5a1c', lineHeight: 1.4 }}>
+              {wakeLock.supported
+                ? 'Activando pantalla siempre encendida para no perder el registro…'
+                : 'Tu navegador no soporta mantener la pantalla encendida automáticamente — para no perder el registro, evitá apagar la pantalla manualmente mientras grabás.'}
+            </div>
+          )}
+
+          <div style={{ position: 'relative' }}>
+            <LiveMap points={rec.points} photos={rec.photos} onSelectPhoto={setViewPhoto} />
+            {rec.status !== 'idle' && (
+              <>
+                <input ref={fileInputRef} type="file" accept="image/*" capture="environment" onChange={handlePhotoFile} style={{ display: 'none' }} />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={photoBusy}
+                  title="Sacar foto y marcarla en el mapa"
+                  style={{
+                    position: 'absolute', bottom: 12, right: 12, width: 46, height: 46, borderRadius: '50%',
+                    border: 'none', background: 'var(--bark)', color: 'var(--lime)', cursor: 'pointer',
+                    display: 'grid', placeItems: 'center', boxShadow: '0 4px 14px rgba(0,0,0,0.3)',
+                    opacity: photoBusy ? 0.6 : 1,
+                  }}>
+                  <Icon name="camera" size={20} color="var(--lime)" />
+                </button>
+                {rec.photos.length > 0 && (
+                  <span style={{ position: 'absolute', bottom: 14, right: 56, fontSize: 10.5, fontWeight: 700, color: 'var(--bark)', background: 'rgba(255,255,255,0.78)', padding: '4px 8px', borderRadius: 20 }}>
+                    {rec.photos.length} foto{rec.photos.length === 1 ? '' : 's'}
+                  </span>
+                )}
+              </>
+            )}
+          </div>
+
+          {viewPhoto && (
+            <div onClick={() => setViewPhoto(null)} style={{
+              position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.78)', zIndex: 50,
+              display: 'grid', placeItems: 'center', padding: 24, cursor: 'pointer',
+            }}>
+              <img src={viewPhoto.dataUrl} alt="Foto de la ruta" style={{ maxWidth: '100%', maxHeight: '80vh', borderRadius: 14 }} />
+            </div>
+          )}
 
           <div style={{
             background: 'var(--paper)', borderRadius: 18, padding: '18px 8px',
